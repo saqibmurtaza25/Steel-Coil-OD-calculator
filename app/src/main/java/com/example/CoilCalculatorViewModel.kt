@@ -12,6 +12,7 @@ data class Metal(val name: String, val density: Double)
 val standardMetals = listOf(
     Metal("Carbon Steel", 7.85),
     Metal("High Carbon Steel", 7.85),
+    Metal("Galvanized", 7.85),
     Metal("Stainless Steel", 8.00),
     Metal("Iron", 7.87),
     Metal("Copper", 8.96),

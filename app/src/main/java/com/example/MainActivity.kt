@@ -342,7 +342,7 @@ fun AppHeaderSection() {
                 )
             }
             Text(
-                text = "STEEL METALLURGY CALCS",
+                text = "DEVELOPER SAQIB MURTAZA",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = SlateLight,
@@ -710,35 +710,14 @@ fun ResultsDisplaySection(
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 1. Overall Outer Diameter (OD)
+                // 1. Single Side OD (Calculated and displayed prominently at the top)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Outer Diameter (OD)", fontSize = 13.sp, color = SlateLight, fontWeight = FontWeight.Medium)
-                        Text("Calculated mm based on input density", fontSize = 10.sp, color = SlateLight.copy(alpha = 0.7f))
-                    }
-                    Text(
-                        text = String.format(Locale.getDefault(), "%.1f mm", od),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Black,
-                        color = SlateTextColor,
-                        modifier = Modifier.testTag("od_result_text")
-                    )
-                }
-
-                Divider(color = SlateMedium, thickness = 0.8.dp)
-
-                // 2. Single-Side Thickness (Wall Thickness) with transparent Formula printed below
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Single-Side Thickness", fontSize = 13.sp, color = SlateLight, fontWeight = FontWeight.Bold)
+                        Text("Single Side OD", fontSize = 13.sp, color = SlateLight, fontWeight = FontWeight.Bold)
                         Text(
                             text = "Formula: (OD - ID) / 2",
                             fontSize = 11.sp,
@@ -748,10 +727,31 @@ fun ResultsDisplaySection(
                     }
                     Text(
                         text = String.format(Locale.getDefault(), "%.1f mm", wallThickness),
-                        fontSize = 22.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         color = SlateTextColor,
                         modifier = Modifier.testTag("wall_thickness_result_text")
+                    )
+                }
+
+                Divider(color = SlateMedium, thickness = 0.8.dp)
+
+                // 2. Overall Outer Diameter (OD) - placed second
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Total Outer Diameter (OD)", fontSize = 13.sp, color = SlateLight, fontWeight = FontWeight.Medium)
+                        Text("Calculated mm based on input density", fontSize = 10.sp, color = SlateLight.copy(alpha = 0.7f))
+                    }
+                    Text(
+                        text = String.format(Locale.getDefault(), "%.1f mm", od),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SlateTextColor,
+                        modifier = Modifier.testTag("od_result_text")
                     )
                 }
 
@@ -1001,9 +1001,9 @@ fun InteractiveCoilPreview(
                     .padding(2.dp)
             )
 
-            // Wall Thickness top label (positioned just over the left radial thickness)
+            // Side-OD top label (positioned over the left radial thickness)
             Text(
-                text = String.format(Locale.getDefault(), "Wall\n%.1f mm", wallThickness),
+                text = String.format(Locale.getDefault(), "Side OD\n%.1f mm", wallThickness),
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
