@@ -1,0 +1,6 @@
+{
+  "name": "Steel Coil Diameter Calculator",
+  "description": "Calculate steel coil outer diameter, radial wall thickness, and total length based on weight, width, material density, and inner diameter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
