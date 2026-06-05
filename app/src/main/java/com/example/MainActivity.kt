@@ -52,22 +52,41 @@ import com.example.ui.theme.SlateLight
 import com.example.ui.theme.SlateMedium
 import com.example.ui.theme.SlateTextColor
 import java.util.Locale
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        try {
+            MobileAds.initialize(this) {}
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         setContent {
             MyApplicationTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     contentWindowInsets = WindowInsets.safeDrawing
                 ) { innerPadding ->
-                    MainScreen(
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                    )
+                    ) {
+                        MainScreen(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                        AdmobBannerView()
+                    }
                 }
             }
         }
@@ -89,6 +108,7 @@ fun MainScreen(
     val widthInput by calculatorViewModel.widthInput.collectAsState()
     val thicknessInput by calculatorViewModel.thicknessInput.collectAsState()
     val idInput by calculatorViewModel.idInput.collectAsState()
+    val gsmInput by calculatorViewModel.gsmInput.collectAsState()
 
     val outerDiameter by calculatorViewModel.outerDiameter.collectAsState()
     val wallThickness by calculatorViewModel.wallThickness.collectAsState()
@@ -133,6 +153,18 @@ fun MainScreen(
                     selectedMetal = selectedMetal,
                     onMetalSelected = { calculatorViewModel.selectMetal(it) }
                 )
+
+                // Dynamic GSM weight input block for Galvanized Steel
+                AnimatedVisibility(
+                    visible = selectedMetal.name.contains("Galvanized", ignoreCase = true),
+                    enter = fadeIn() + slideInVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    GalvanizedGsmSelectorBlock(
+                        gsmInput = gsmInput,
+                        onGsmChanged = { calculatorViewModel.updateGsmInput(it) }
+                    )
+                }
 
                 // 2. Weight Input & Unit selector
                 WeightInputRow(
@@ -350,7 +382,7 @@ fun AppHeaderSection() {
             )
         }
         Text(
-            text = "Steel Coil Diameter Calculator",
+            text = "Coil OD Calculator",
             fontSize = 22.sp,
             fontWeight = FontWeight.Black,
             color = SlateTextColor,
@@ -669,6 +701,129 @@ fun CoilIdSelectorBlock(
                     },
                     colors = InputChipDefaults.inputChipColors(
                         containerColor = SlateDarkest,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        labelColor = SlateTextColor
+                    )
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GalvanizedGsmSelectorBlock(
+    gsmInput: String,
+    onGsmChanged: (String) -> Unit
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(SlateDarkest.copy(alpha = 0.5f))
+            .border(1.dp, SlateMedium.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column {
+            Text(
+                text = "Zinc Coating Weight (GSM)",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "Dual-side coating weight in g/m²",
+                fontSize = 10.sp,
+                color = SlateLight
+            )
+        }
+
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = gsmInput,
+                onValueChange = onGsmChanged,
+                label = { Text("Zinc Coating Weight (GSM)") },
+                placeholder = { Text("Enter GSM (e.g. 120, 275)") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("gsm_text_field"),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = SlateTextColor,
+                    unfocusedTextColor = SlateTextColor
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        modifier = Modifier.testTag("gsm_dropdown_trigger")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Standard GSM Values",
+                            tint = SlateLight
+                        )
+                    }
+                }
+            )
+
+            DropdownMenu(
+                expanded = isExpanded,
+                onDismissRequest = { isExpanded = false },
+                modifier = Modifier.background(SlateDark)
+            ) {
+                listOf("40", "60", "90", "120", "275").forEach { preset ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = "$preset GSM",
+                                color = SlateTextColor,
+                                fontSize = 14.sp
+                            )
+                        },
+                        onClick = {
+                            onGsmChanged(preset)
+                            isExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // Quick Select Assist Chips
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Presets:",
+                fontSize = 11.sp,
+                color = SlateLight,
+                fontWeight = FontWeight.Medium
+            )
+
+            listOf("40", "90", "120", "275").forEach { valSelection ->
+                val isSelected = gsmInput == valSelection
+                InputChip(
+                    selected = isSelected,
+                    onClick = { onGsmChanged(valSelection) },
+                    label = {
+                        Text(
+                            text = "$valSelection GSM",
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    modifier = Modifier.testTag("gsm_chip_$valSelection"),
+                    colors = InputChipDefaults.inputChipColors(
+                        containerColor = SlateDark,
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         labelColor = SlateTextColor
@@ -1043,4 +1198,26 @@ fun PreviewMainScreen() {
             MainScreen()
         }
     }
+}
+
+@Composable
+fun AdmobBannerView(modifier: Modifier = Modifier) {
+    AndroidView(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(55.dp),
+        factory = { context ->
+            try {
+                AdView(context).apply {
+                    setAdSize(AdSize.BANNER)
+                    adUnitId = "ca-app-pub-2545455463429976/3293849530"
+                    loadAd(AdRequest.Builder().build())
+                }
+            } catch (t: Throwable) {
+                android.view.View(context).apply {
+                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                }
+            }
+        }
+    )
 }

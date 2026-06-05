@@ -11,8 +11,7 @@ data class Metal(val name: String, val density: Double)
 
 val standardMetals = listOf(
     Metal("Carbon Steel", 7.85),
-    Metal("High Carbon Steel", 7.85),
-    Metal("Galvanized", 7.85),
+    Metal("Galvanized Steel", 7.85),
     Metal("Stainless Steel", 8.00),
     Metal("Iron", 7.87),
     Metal("Copper", 8.96),
@@ -44,6 +43,9 @@ class CoilCalculatorViewModel : ViewModel() {
 
     private val _idInput = MutableStateFlow("508")
     val idInput: StateFlow<String> = _idInput.asStateFlow()
+
+    private val _gsmInput = MutableStateFlow("120")
+    val gsmInput: StateFlow<String> = _gsmInput.asStateFlow()
 
     // Calculation Result States
     private val _outerDiameter = MutableStateFlow<Double?>(null)
@@ -84,6 +86,10 @@ class CoilCalculatorViewModel : ViewModel() {
         _idInput.value = id.filter { it.isDigit() || it == '.' }
     }
 
+    fun updateGsmInput(gsm: String) {
+        _gsmInput.value = gsm.filter { it.isDigit() }
+    }
+
     // Reset Inputs and Outputs
     fun reset() {
         _selectedMetal.value = standardMetals[0]
@@ -92,6 +98,7 @@ class CoilCalculatorViewModel : ViewModel() {
         _widthInput.value = "1219"
         _thicknessInput.value = ""
         _idInput.value = "508"
+        _gsmInput.value = "120"
         
         _outerDiameter.value = null
         _wallThickness.value = null
@@ -134,7 +141,13 @@ class CoilCalculatorViewModel : ViewModel() {
             null
         }
 
-        val density = _selectedMetal.value.density
+        var density = _selectedMetal.value.density
+        if (_selectedMetal.value.name.contains("Galvanized", ignoreCase = true)) {
+            val gsmVal = _gsmInput.value.toDoubleOrNull() ?: 120.0
+            // If thickness is provided and is valid, use that. Otherwise assume nominal reference of 1.0mm
+            val refThickness = if (thicknessVal != null && thicknessVal > 0.0) thicknessVal else 1.0
+            density = 7.85 + (gsmVal / (1000.0 * refThickness))
+        }
 
         // Conversion logic:
         // Weight input could be KG or MT (Metric Tons)
